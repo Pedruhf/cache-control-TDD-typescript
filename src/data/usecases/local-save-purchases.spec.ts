@@ -80,4 +80,11 @@ describe('LocalSavePurchases Usecase', () => {
     expect(cacheStoreSpy.insertKey).toBe("purchases");
     expect(cacheStoreSpy.insertValues).toEqual(purchases);
   });
+
+  test('Should throw if insert throws', () => {
+    const { sut, cacheStoreSpy } = makeSut();
+    jest.spyOn(cacheStoreSpy, "insert").mockImplementationOnce(() => { throw new Error() });
+    const savePromise = sut.save(mockPurchases());
+    expect(savePromise).rejects.toThrow();
+  });
 });
