@@ -37,20 +37,15 @@ const makeSut = (): SutTypes => {
 };
 
 describe('LocalSavePurchases Usecase', () => {
-  test('Should not delete cache on sut.init', () => {
+  test('Should not delete cache on init', () => {
     const { cacheStoreSpy } = makeSut();
     expect(cacheStoreSpy.deleteCallsCount).toBe(0);
   });
 
-  test('Should delete old cache on sut.save', async () => {
+  test('Should delete old cache on save', async () => {
     const { sut, cacheStoreSpy } = makeSut();
     await sut.save();
     expect(cacheStoreSpy.deleteCallsCount).toBe(1);
-  });
-
-  test('Should call delete with correct key', async () => {
-    const { sut, cacheStoreSpy } = makeSut();
-    await sut.save();
     expect(cacheStoreSpy.key).toBe("purchases");
   });
 });
