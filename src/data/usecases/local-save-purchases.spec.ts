@@ -83,7 +83,7 @@ describe('LocalSavePurchases Usecase', () => {
     const timestamp = new Date();
     const { sut, cacheStoreSpy } = makeSut(timestamp);
     const purchases = mockPurchases();
-    await sut.save(purchases);
+    const savePromise = sut.save(purchases);
     expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete, CacheStoreSpy.Messages.insert]);
     expect(cacheStoreSpy.deleteKey).toBe("purchases");
     expect(cacheStoreSpy.insertKey).toBe("purchases");
@@ -91,6 +91,7 @@ describe('LocalSavePurchases Usecase', () => {
       timestamp,
       value: purchases
     });
+    await expect(savePromise).resolves.toBeFalsy();
   });
 
   test('Should throw if insert throws', async () => {
