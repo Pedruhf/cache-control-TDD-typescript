@@ -18,7 +18,7 @@ const mockPurchases = (): SavePurchases.Params[] => [
 ];
 
 class CacheStoreSpy implements CacheStore {
-  messages: CacheStoreSpy.Messages[] = [];
+  actions: CacheStoreSpy.Action[] = [];
   deleteCallsCount = 0;
   insertCallsCount = 0;
   deleteKey?: string;
@@ -26,13 +26,13 @@ class CacheStoreSpy implements CacheStore {
   insertValues: SavePurchases.Params[] = [];
 
   delete (key: string): void {
-    this.messages.push(CacheStoreSpy.Messages.delete);
+    this.actions.push(CacheStoreSpy.Action.delete);
     this.deleteCallsCount++;
     this.deleteKey = key;
   }
 
   insert (key: string, value: any): void {
-    this.messages.push(CacheStoreSpy.Messages.insert);
+    this.actions.push(CacheStoreSpy.Action.insert);
     this.insertCallsCount++;
     this.insertKey = key;
     this.insertValues = value;
@@ -40,7 +40,7 @@ class CacheStoreSpy implements CacheStore {
 }
 
 namespace CacheStoreSpy {
-  export enum Messages {
+  export enum Action {
     delete,
     insert,
   }
@@ -64,18 +64,18 @@ const makeSut = (timestamp = new Date()): SutTypes => {
 describe('LocalSavePurchases Usecase', () => {
   test('Should not delete or insert cache on init', () => {
     const { cacheStoreSpy } = makeSut();
-    expect(cacheStoreSpy.messages).toEqual([]);
+    expect(cacheStoreSpy.actions).toEqual([]);
   });
 
   test('Should not insert new cache if delete fails', async () => {
     const { sut, cacheStoreSpy } = makeSut();
     jest.spyOn(cacheStoreSpy, "delete").mockImplementationOnce(() => {
-      cacheStoreSpy.messages.push(CacheStoreSpy.Messages.delete);
+      cacheStoreSpy.actions.push(CacheStoreSpy.Action.delete);
       throw new Error()
     });
 
     const savePromise = sut.save(mockPurchases());
-    expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete]);
+    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.delete]);
     await expect(savePromise).rejects.toThrow();
   });
 
@@ -84,7 +84,7 @@ describe('LocalSavePurchases Usecase', () => {
     const { sut, cacheStoreSpy } = makeSut(timestamp);
     const purchases = mockPurchases();
     const savePromise = sut.save(purchases);
-    expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete, CacheStoreSpy.Messages.insert]);
+    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.delete, CacheStoreSpy.Action.insert]);
     expect(cacheStoreSpy.deleteKey).toBe("purchases");
     expect(cacheStoreSpy.insertKey).toBe("purchases");
     expect(cacheStoreSpy.insertValues).toEqual({
@@ -97,11 +97,11 @@ describe('LocalSavePurchases Usecase', () => {
   test('Should throw if insert throws', async () => {
     const { sut, cacheStoreSpy } = makeSut();
     jest.spyOn(cacheStoreSpy, "insert").mockImplementationOnce(() => {
-      cacheStoreSpy.messages.push(CacheStoreSpy.Messages.insert);
+      cacheStoreSpy.actions.push(CacheStoreSpy.Action.insert);
       throw new Error()
     });
     const savePromise = sut.save(mockPurchases());
-    expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete, CacheStoreSpy.Messages.insert]);
+    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.delete, CacheStoreSpy.Action.insert]);
     await expect(savePromise).rejects.toThrow();
   });
 });
