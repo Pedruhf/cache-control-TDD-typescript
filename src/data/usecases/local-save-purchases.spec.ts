@@ -67,12 +67,6 @@ describe('LocalSavePurchases Usecase', () => {
     expect(cacheStoreSpy.messages).toEqual([]);
   });
 
-  test('Should delete old cache on save', async () => {
-    const { sut, cacheStoreSpy } = makeSut();
-    await sut.save(mockPurchases());
-    expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete, CacheStoreSpy.Messages.insert]);
-  });
-
   test('Should not insert new cache if delete fails', async () => {
     const { sut, cacheStoreSpy } = makeSut();
     jest.spyOn(cacheStoreSpy, "delete").mockImplementationOnce(() => {
@@ -90,6 +84,7 @@ describe('LocalSavePurchases Usecase', () => {
     const purchases = mockPurchases();
     await sut.save(purchases);
     expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete, CacheStoreSpy.Messages.insert]);
+    expect(cacheStoreSpy.deleteKey).toBe("purchases");
     expect(cacheStoreSpy.insertKey).toBe("purchases");
     expect(cacheStoreSpy.insertValues).toEqual(purchases);
   });
