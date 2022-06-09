@@ -2,35 +2,47 @@ import { CacheStore } from "@/data/protocols/cache";
 import { SavePurchases } from "@/domain/usecases";
 import { LocalSavePurchases } from "./index";
 
+import { faker } from "@faker-js/faker";
+
 const mockPurchases = (): SavePurchases.Params[] => [
   {
-    id: "1",
-    date: new Date(),
-    value: 10
+    id: faker.datatype.uuid(),
+    date: faker.date.recent(),
+    value: faker.datatype.number(),
   },
   {
-    id: "2",
-    date: new Date(),
-    value: 20
+    id: faker.datatype.uuid(),
+    date: faker.date.recent(),
+    value: faker.datatype.number(),
   },
 ];
 
 class CacheStoreSpy implements CacheStore {
+  messages: CacheStoreSpy.Messages[] = [];
   deleteCallsCount = 0;
   insertCallsCount = 0;
   deleteKey?: string;
   insertKey?: string;
-  insertValues?: SavePurchases.Params[] = [];
+  insertValues: SavePurchases.Params[] = [];
 
   delete (key: string): void {
+    this.messages.push(CacheStoreSpy.Messages.delete);
     this.deleteCallsCount++;
     this.deleteKey = key;
   }
 
   insert (key: string, value: any): void {
+    this.messages.push(CacheStoreSpy.Messages.insert);
     this.insertCallsCount++;
     this.insertKey = key;
     this.insertValues = value;
+  }
+}
+
+namespace CacheStoreSpy {
+  export enum Messages {
+    delete,
+    insert,
   }
 }
 
@@ -50,24 +62,26 @@ const makeSut = (): SutTypes => {
 };
 
 describe('LocalSavePurchases Usecase', () => {
-  test('Should not delete cache on init', () => {
+  test('Should not delete or insert cache on init', () => {
     const { cacheStoreSpy } = makeSut();
-    expect(cacheStoreSpy.deleteCallsCount).toBe(0);
+    expect(cacheStoreSpy.messages).toEqual([]);
   });
 
   test('Should delete old cache on save', async () => {
     const { sut, cacheStoreSpy } = makeSut();
     await sut.save(mockPurchases());
-    expect(cacheStoreSpy.deleteCallsCount).toBe(1);
-    expect(cacheStoreSpy.deleteKey).toBe("purchases");
+    expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete, CacheStoreSpy.Messages.insert]);
   });
 
   test('Should not insert new cache if delete fails', () => {
     const { sut, cacheStoreSpy } = makeSut();
-    jest.spyOn(cacheStoreSpy, "delete").mockImplementationOnce(() => { throw new Error() });
+    jest.spyOn(cacheStoreSpy, "delete").mockImplementationOnce(() => {
+      cacheStoreSpy.messages.push(CacheStoreSpy.Messages.delete);
+      throw new Error()
+    });
 
     const savePromise = sut.save(mockPurchases());
-    expect(cacheStoreSpy.insertCallsCount).toBe(0);
+    expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete]);
     expect(savePromise).rejects.toThrow();
   });
 
@@ -75,16 +89,19 @@ describe('LocalSavePurchases Usecase', () => {
     const { sut, cacheStoreSpy } = makeSut();
     const purchases = mockPurchases();
     await sut.save(purchases);
-    expect(cacheStoreSpy.deleteCallsCount).toBe(1);
-    expect(cacheStoreSpy.insertCallsCount).toBe(1);
+    expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete, CacheStoreSpy.Messages.insert]);
     expect(cacheStoreSpy.insertKey).toBe("purchases");
     expect(cacheStoreSpy.insertValues).toEqual(purchases);
   });
 
   test('Should throw if insert throws', () => {
     const { sut, cacheStoreSpy } = makeSut();
-    jest.spyOn(cacheStoreSpy, "insert").mockImplementationOnce(() => { throw new Error() });
+    jest.spyOn(cacheStoreSpy, "insert").mockImplementationOnce(() => {
+      cacheStoreSpy.messages.push(CacheStoreSpy.Messages.insert);
+      throw new Error()
+    });
     const savePromise = sut.save(mockPurchases());
+    expect(cacheStoreSpy.messages).toEqual([CacheStoreSpy.Messages.delete, CacheStoreSpy.Messages.insert]);
     expect(savePromise).rejects.toThrow();
   });
 });
