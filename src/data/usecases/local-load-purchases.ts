@@ -6,13 +6,13 @@ export class LocalLoadPurchases implements SavePurchases, LoadPurchases {
   
   constructor (
     private readonly cacheStore: CacheStore,
-    private readonly timestamp: Date,
+    private readonly currentDate: Date,
   ) {}
 
   async save (purchases: SavePurchases.Params[]): Promise<void> {
     this.cacheStore.delete(this.key);
     this.cacheStore.insert(this.key, {
-      timestamp: this.timestamp,
+      timestamp: this.currentDate,
       value: purchases
     });
   }

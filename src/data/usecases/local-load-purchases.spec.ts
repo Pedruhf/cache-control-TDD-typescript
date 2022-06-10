@@ -1,4 +1,4 @@
-import { CacheStoreSpy } from "@/data/tests/cache";
+import { CacheStoreSpy, mockPurchases } from "@/data/tests/cache";
 import { LocalLoadPurchases } from "./index";
 
 type SutTypes = {
@@ -22,13 +22,6 @@ describe('LocalLoadPurchases Usecase', () => {
     expect(cacheStoreSpy.actions).toEqual([]);
   });
 
-  test('Should call correct key on load', async () => {
-    const { sut, cacheStoreSpy } = makeSut();
-    await sut.loadAll();
-    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch]);
-    expect(cacheStoreSpy.fetchKey).toBe("purchases");
-  });
-
   test('Should return empty list if load fails', async () => {
     const { sut, cacheStoreSpy } = makeSut();
     jest.spyOn(cacheStoreSpy, "fetch").mockImplementation(() => {
@@ -42,9 +35,15 @@ describe('LocalLoadPurchases Usecase', () => {
   });
 
   test('Should return a list of purchases if cache is less than 3 days old', async () => {
-    const { sut, cacheStoreSpy } = makeSut();
+    const timestamp = new Date();
+    const { sut, cacheStoreSpy } = makeSut(timestamp);
+    cacheStoreSpy.fetchResult = {
+      timestamp,
+      value: mockPurchases(),
+    }
     const purchases = await sut.loadAll();
     expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch]);
-    expect(purchases).toBeInstanceOf
+    expect(cacheStoreSpy.fetchKey).toBe("purchases")
+    expect(purchases).toEqual(cacheStoreSpy.fetchResult.value);
   });
 });
