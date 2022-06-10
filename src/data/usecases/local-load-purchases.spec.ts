@@ -40,4 +40,11 @@ describe('LocalLoadPurchases Usecase', () => {
     expect(cacheStoreSpy.deleteKey).toBe("purchases");
     expect(purchases).toEqual([]);
   });
+
+  test('Should return a list of purchases if cache is less than 3 days old', async () => {
+    const { sut, cacheStoreSpy } = makeSut();
+    const purchases = await sut.loadAll();
+    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch]);
+    expect(purchases).toBeInstanceOf
+  });
 });
