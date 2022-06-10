@@ -1,6 +1,6 @@
 import { CacheStore } from "@/data/protocols/cache";
 import { SavePurchases } from "@/domain/usecases";
-import { LocalSavePurchases } from "./index";
+import { LocalLoadPurchases } from "./index";
 
 import { faker } from "@faker-js/faker";
 
@@ -47,13 +47,13 @@ namespace CacheStoreSpy {
 }
 
 type SutTypes = {
-  sut: LocalSavePurchases;
+  sut: LocalLoadPurchases;
   cacheStoreSpy: CacheStoreSpy;
 };
 
 const makeSut = (timestamp = new Date()): SutTypes => {
   const cacheStoreSpy = new CacheStoreSpy();
-  const sut = new LocalSavePurchases(cacheStoreSpy, timestamp);
+  const sut = new LocalLoadPurchases(cacheStoreSpy, timestamp);
 
   return {
     sut,
@@ -61,7 +61,7 @@ const makeSut = (timestamp = new Date()): SutTypes => {
   };
 };
 
-describe('LocalSavePurchases Usecase', () => {
+describe('LocalLoadPurchases Usecase', () => {
   test('Should not delete or insert cache on init', () => {
     const { cacheStoreSpy } = makeSut();
     expect(cacheStoreSpy.actions).toEqual([]);
