@@ -28,4 +28,16 @@ describe('LocalLoadPurchases Usecase', () => {
     expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch]);
     expect(cacheStoreSpy.fetchKey).toBe("purchases");
   });
+
+  test('Should return empty list if load fails', async () => {
+    const { sut, cacheStoreSpy } = makeSut();
+    jest.spyOn(cacheStoreSpy, "fetch").mockImplementation(() => {
+      cacheStoreSpy.actions.push(CacheStoreSpy.Action.fetch);
+      throw new Error();
+    });
+    const purchases = await sut.loadAll();
+    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch, CacheStoreSpy.Action.delete]);
+    expect(cacheStoreSpy.deleteKey).toBe("purchases");
+    expect(purchases).toEqual([]);
+  });
 });
