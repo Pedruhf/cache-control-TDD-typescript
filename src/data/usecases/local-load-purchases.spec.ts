@@ -35,8 +35,13 @@ describe('LocalLoadPurchases Usecase', () => {
   });
 
   test('Should return a list of purchases if cache is less than 3 days old', async () => {
-    const timestamp = new Date();
-    const { sut, cacheStoreSpy } = makeSut(timestamp);
+    const currentDate = new Date();
+    const cacheExpirationTime = 3;
+    const timestamp = new Date(currentDate);
+    timestamp.setDate(timestamp.getDate() - cacheExpirationTime);
+    timestamp.setSeconds(timestamp.getSeconds() + 1);
+
+    const { sut, cacheStoreSpy } = makeSut(currentDate);
     cacheStoreSpy.fetchResult = {
       timestamp,
       value: mockPurchases(),
@@ -45,5 +50,24 @@ describe('LocalLoadPurchases Usecase', () => {
     expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch]);
     expect(cacheStoreSpy.fetchKey).toBe("purchases")
     expect(purchases).toEqual(cacheStoreSpy.fetchResult.value);
+  });
+
+  test('Should return an empty list if cache is more than 3 days old', async () => {
+    const currentDate = new Date();
+    const cacheExpirationTime = 3;
+    const timestamp = new Date(currentDate);
+    timestamp.setDate(timestamp.getDate() - cacheExpirationTime);
+    timestamp.setSeconds(timestamp.getSeconds() - 1);
+
+    const { sut, cacheStoreSpy } = makeSut(currentDate);
+    cacheStoreSpy.fetchResult = {
+      timestamp,
+      value: mockPurchases(),
+    }
+    const purchases = await sut.loadAll();
+    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch, CacheStoreSpy.Action.delete]);
+    expect(cacheStoreSpy.fetchKey).toBe("purchases");
+    expect(cacheStoreSpy.deleteKey).toBe("purchases");
+    expect(purchases).toEqual([]);
   });
 });
