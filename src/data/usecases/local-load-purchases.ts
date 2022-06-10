@@ -19,8 +19,8 @@ export class LocalLoadPurchases implements SavePurchases, LoadPurchases {
 
   async loadAll (): Promise<LoadPurchases.Result[]> {
     try {
-      const purchases = this.cacheStore.fetch(this.key);
-      return [];
+      const cache = this.cacheStore.fetch(this.key);
+      return cache.value;
     } catch {
       this.cacheStore.delete(this.key);
       return [];

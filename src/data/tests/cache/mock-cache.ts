@@ -10,6 +10,7 @@ export class CacheStoreSpy implements CacheStore {
   insertKey?: string;
   fetchKey?: string;
   insertValues: SavePurchases.Params[] = [];
+  fetchResult: any;
 
   delete (key: string): void {
     this.actions.push(CacheStoreSpy.Action.delete);
@@ -24,9 +25,11 @@ export class CacheStoreSpy implements CacheStore {
     this.insertValues = value;
   }
 
-  fetch (key: string): void {
+  fetch (key: string): any {
     this.actions.push(CacheStoreSpy.Action.fetch);
     this.fetchKey = key;
+
+    return this.fetchResult;
   }
 
 }
