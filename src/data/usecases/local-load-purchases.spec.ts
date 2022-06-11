@@ -29,8 +29,7 @@ describe('LocalLoadPurchases Usecase', () => {
       throw new Error();
     });
     const purchases = await sut.loadAll();
-    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch, CacheStoreSpy.Action.delete]);
-    expect(cacheStoreSpy.deleteKey).toBe("purchases");
+    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch]);
     expect(purchases).toEqual([]);
   });
 
