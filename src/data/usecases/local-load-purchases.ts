@@ -24,7 +24,6 @@ export class LocalLoadPurchases implements SavePurchases, LoadPurchases {
         return cache.value;
       }
 
-      this.cacheStore.delete(this.key);
       throw new Error();
     } catch {
       return [];
