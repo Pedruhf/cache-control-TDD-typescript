@@ -1,4 +1,4 @@
-import { CacheStoreSpy, mockPurchases } from "@/data/tests/cache";
+import { CacheStoreSpy, mockPurchases, getCacheExpirationDate } from "@/data/tests/cache";
 import { LocalLoadPurchases } from "./index";
 
 type SutTypes = {
@@ -34,11 +34,9 @@ describe('LocalLoadPurchases Usecase', () => {
     expect(purchases).toEqual([]);
   });
 
-  test('Should return a list of purchases if cache is less than 3 days old', async () => {
+  test('Should return a list of purchases if cache is valid', async () => {
     const currentDate = new Date();
-    const cacheExpirationTime = 3;
-    const timestamp = new Date(currentDate);
-    timestamp.setDate(timestamp.getDate() - cacheExpirationTime);
+    const timestamp = getCacheExpirationDate(currentDate);
     timestamp.setSeconds(timestamp.getSeconds() + 1);
 
     const { sut, cacheStoreSpy } = makeSut(currentDate);
@@ -52,11 +50,9 @@ describe('LocalLoadPurchases Usecase', () => {
     expect(purchases).toEqual(cacheStoreSpy.fetchResult.value);
   });
 
-  test('Should return an empty list if cache is greater than 3 days old', async () => {
+  test('Should return an empty list if cache is expired', async () => {
     const currentDate = new Date();
-    const cacheExpirationTime = 3;
-    const timestamp = new Date(currentDate);
-    timestamp.setDate(timestamp.getDate() - cacheExpirationTime);
+    const timestamp = getCacheExpirationDate(currentDate);
     timestamp.setSeconds(timestamp.getSeconds() - 1);
 
     const { sut, cacheStoreSpy } = makeSut(currentDate);
@@ -71,11 +67,9 @@ describe('LocalLoadPurchases Usecase', () => {
     expect(purchases).toEqual([]);
   });
 
-  test('Should return an empty list if cache is equal to 3 days old', async () => {
+  test('Should return an empty list if cache is on expiration date', async () => {
     const currentDate = new Date();
-    const cacheExpirationTime = 3;
-    const timestamp = new Date(currentDate);
-    timestamp.setDate(timestamp.getDate() - cacheExpirationTime);
+    const timestamp = getCacheExpirationDate(currentDate);
 
     const { sut, cacheStoreSpy } = makeSut(currentDate);
     cacheStoreSpy.fetchResult = {

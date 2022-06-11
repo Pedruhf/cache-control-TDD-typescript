@@ -2,6 +2,13 @@ import { CacheStore } from "@/data/protocols/cache";
 import { SavePurchases } from "@/domain/usecases";
 import { faker } from "@faker-js/faker";
 
+export const getCacheExpirationDate = (timestamp: Date): Date => {
+  const cacheExpirationTime = 3;
+  const maxCacheAge = new Date(timestamp);
+  maxCacheAge.setDate(maxCacheAge.getDate() - cacheExpirationTime);
+  return maxCacheAge;
+}
+
 export class CacheStoreSpy implements CacheStore {
   actions: CacheStoreSpy.Action[] = [];
   deleteCallsCount = 0;

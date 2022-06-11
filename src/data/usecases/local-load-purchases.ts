@@ -1,4 +1,4 @@
-import { CacheStore } from "@/data/protocols/cache"
+import { CachePolicy, CacheStore } from "@/data/protocols/cache"
 import { LoadPurchases, SavePurchases } from "@/domain/usecases";
 
 export class LocalLoadPurchases implements SavePurchases, LoadPurchases {
@@ -20,9 +20,7 @@ export class LocalLoadPurchases implements SavePurchases, LoadPurchases {
   async loadAll (): Promise<LoadPurchases.Result[]> {
     try {
       const cache = this.cacheStore.fetch(this.key);
-      const maxAge = new Date(cache.timestamp);
-      maxAge.setDate(maxAge.getDate() + 3);
-      if (this.currentDate < maxAge ) {
+      if (CachePolicy.validate(cache.timestamp, this.currentDate)) {
         return cache.value;
       }
 
