@@ -21,4 +21,15 @@ describe('LocalValidatePurchases Usecase', () => {
     const { cacheStoreSpy } = makeSut();
     expect(cacheStoreSpy.actions).toEqual([]);
   });
+
+  test('Should delte cache if load fails', () => {
+    const { sut, cacheStoreSpy } = makeSut();
+    jest.spyOn(cacheStoreSpy, "fetch").mockImplementation(() => {
+      cacheStoreSpy.actions.push(CacheStoreSpy.Action.fetch);
+      throw new Error();
+    });
+    sut.validate();
+    expect(cacheStoreSpy.actions).toEqual([CacheStoreSpy.Action.fetch, CacheStoreSpy.Action.delete]);
+    expect(cacheStoreSpy.deleteKey).toBe("purchases");
+  });
 });
